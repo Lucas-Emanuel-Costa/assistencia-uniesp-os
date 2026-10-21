@@ -14,6 +14,9 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Collections;
+import java.util.Objects;
+import java.time.format.DateTimeFormatter;
 
 @Entity
 @Getter
@@ -72,16 +75,36 @@ public class OrdemServicoEntity {
     private List<AnexoEntity> anexos = new ArrayList<>();
 
     public OrdemServicoEntity(String numeroProtocolo, ClienteEntity cliente, EquipamentoEntity equipamento, String descricaoProblema) {
+        this(numeroProtocolo, cliente, equipamento, descricaoProblema, LocalDateTime.now());
+    }
+
+    public OrdemServicoEntity(String numeroProtocolo, ClienteEntity cliente, EquipamentoEntity equipamento,
+                              String descricaoProblema, LocalDateTime dataAbertura) {
         if (!cliente.isAtivo()) {
             throw new RegraNegocioException("Não é permitido abrir Ordem de Serviço para um cliente inativo.");
         }
-        this.numeroProtocolo = numeroProtocolo;
+        if (equipamento.getCliente() == null || cliente.getId() == null
+                || !Objects.equals(equipamento.getCliente().getId(), cliente.getId())) {
+            throw new RegraNegocioException("O equipamento informado não pertence ao cliente indicado.");
+        }
+        if (descricaoProblema == null || descricaoProblema.isBlank()) {
+            throw new RegraNegocioException("A descrição do problema é obrigatória.");
+        }
         this.cliente = cliente;
         this.equipamento = equipamento;
         this.descricaoProblema = descricaoProblema;
         this.status = StatusOrdemServico.RECEBIDA;
-        this.dataAbertura = LocalDateTime.now();
+        this.dataAbertura = Objects.requireNonNull(dataAbertura);
+        String prefixo = "OS-" + dataAbertura.toLocalDate().format(DateTimeFormatter.BASIC_ISO_DATE) + "-";
+        if (numeroProtocolo == null || !numeroProtocolo.matches(prefixo + "[0-9A-F]{4}")) {
+            throw new RegraNegocioException("O protocolo deve seguir o formato OS-YYYYMMDD-XXXX e a data de abertura.");
+        }
+        this.numeroProtocolo = numeroProtocolo;
         adicionarHistorico(null, StatusOrdemServico.RECEBIDA, "SISTEMA", "Abertura da ordem de serviço.");
+    }
+
+    public List<HistoricoStatusEntity> getHistorico() {
+        return Collections.unmodifiableList(historico);
     }
 
     public void atribuirTecnico(TecnicoEntity tecnico, String responsavel) {

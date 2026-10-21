@@ -8,11 +8,21 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 
 import java.net.URI;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ProblemDetail tratarJsonInvalido(HttpMessageNotReadableException exception, HttpServletRequest request) {
+        ProblemDetail problema = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
+                "O corpo da requisição deve conter um JSON válido com os tipos de campos esperados.");
+        problema.setTitle("Dados de requisição inválidos");
+        problema.setInstance(URI.create(request.getRequestURI()));
+        return problema;
+    }
 
     @ExceptionHandler(RecursoNaoEncontradoException.class)
     public ProblemDetail tratarRecursoNaoEncontrado(RecursoNaoEncontradoException exception,

@@ -5,6 +5,7 @@ import br.edu.uniesp.assistencia.internal.equipamento.entity.EquipamentoEntity;
 import br.edu.uniesp.assistencia.internal.ordemservico.dto.CriarOrdemServicoRequest;
 import br.edu.uniesp.assistencia.internal.ordemservico.dto.CriarOrdemServicoResponse;
 import br.edu.uniesp.assistencia.internal.ordemservico.entity.OrdemServicoEntity;
+import java.time.LocalDateTime;
 
 public final class OrdemServicoMapper {
 
@@ -14,12 +15,14 @@ public final class OrdemServicoMapper {
     public static OrdemServicoEntity paraEntidade(CriarOrdemServicoRequest request,
                                                   String numeroProtocolo,
                                                   ClienteEntity cliente,
-                                                  EquipamentoEntity equipamento) {
+                                                  EquipamentoEntity equipamento,
+                                                  LocalDateTime dataAbertura) {
         return new OrdemServicoEntity(
                 numeroProtocolo,
                 cliente,
                 equipamento,
-                request.descricaoProblema()
+                request.descricaoProblema(),
+                dataAbertura
         );
     }
 
